@@ -6,14 +6,14 @@ exports = Class(Entity, function (supr) {
     this.init = function (opts) {
       opts = merge(opts, {
           type: 'Border',
-          collides_with: ['Sheep'],
           handleEvents: false,
           ignoreSubviews: true,
           backgroundColor: '#FFFFFF',
-          opacity: 0.5,
-          collision_shape: Rect
+          opacity: 0.5
       });
       supr(this, 'init', [opts]);
+      this.collides_with = ['Sheep'];
+      this.collision_shape = Rect;
     };
 
     this.getCollisionShape = function(entityType) {

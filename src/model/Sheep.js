@@ -29,14 +29,14 @@ exports = Class(Entity, function(supr) {
   this.init = function (opts) {
     this.maxWorldX = Math.round(opts.maxWorldX);
     this.maxWorldY = Math.round(opts.maxWorldY);
-    opts = merge(opts, {
+    merge(opts, {
         type: "Sheep",
         width: 128,
-        height: 128,
-        collides_with: ['Border', 'Sheep', 'Wolf'],
-        collision_shape: Circle
+        height: 128
     });
     supr(this, 'init', [opts]);
+    this.collides_with = ['Border', 'Sheep', 'Wolf'];
+    this.collision_shape = Circle;
     this.style.anchorX = this.style.width * 0.5;
     this.style.anchorY = this.style.height * 0.5;
     this.collision_shape_radius = 64;
@@ -79,7 +79,6 @@ exports = Class(Entity, function(supr) {
     this.on('InputSelect', bind(this, function () {
       this.onTap.call(this);
     }));
-
   };
 
   this.moveRandomly = function() {
@@ -122,7 +121,7 @@ exports = Class(Entity, function(supr) {
     }
 
     if (entity.type === this.type) {
-
+/*
       if (this.style.x > entity.style.x) {
         this.queue.removeAllTasks('moveRandomly');
         this.inverseDirection();
@@ -130,26 +129,9 @@ exports = Class(Entity, function(supr) {
         this.stopMoving();
         this.queue.add('moveRandomly', [2000, 4000]);
       }
-
+*/
     }
     this.lastCollidedEntity = entity;
-  };
-
-  this.blink = function(count) {
-    this.touchLock = true;
-    count = count || 0;
-    var opacity = count % 2 === 0 ? 1 : 0.5;
-    this.sprite.style.opacity = opacity;
-    if (count >= 12) {
-      this.touchLock = false;
-      this.sprite.style.opacity = 1;
-      return;
-    }
-
-    setTimeout(bind(this, function() {
-      count++;
-      this.blink.call(this, count);
-    }), 400);
   };
   
 });

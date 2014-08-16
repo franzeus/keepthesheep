@@ -8,46 +8,48 @@ import src.model.states.StateIdle as StateIdle;
 exports = Class(ui.View, function (supr) {
 
     this.init = function (opts) {
-      this.type = opts["type"] || "Entity";
-      this.epoch_origin = opts["epoch_origin"] || 0;
-      this.collision_shape = opts["collision_shape"] || null;
       var view_opts = {
           x: opts.x,
           y: opts.y,
           scale: opts.scale || 1,
           width: opts.width || 0,
           height: opts.height || 0,
-          offsetX: opts.offsetX || 0,
-          offsetY: opts.offsetY || 0,
+          offsetX: 0,
+          offsetY: 0,
           r: opts.r || 0,
           clip: false
       };
-      merge(view_opts, opts);
+      this.id = this.getId();
+      this.speed = 10;
       this.isDead = false;
-      this.speed = 100;
+      this.isGhost = false;
       this.isMoving = false;
-      this.doUpdate = true;
-      this.updateFn = null;
-      this.state_manager = null;
       this.directionVec = new Vec2D({ x: 0, y: 0 });
+      this.touchLock = false;
+      this.doUpdate = true;
+      this.type = opts.type || 'Entity';
+
+      // States
+      this.state_manager = null;
       this.states = {
         idle: new StateIdle()
       };
       this.current_state = null;
       this.prev_states = [];
       this.current_state_name = null;
+
+      // Collision
+      this.collision_shape = null,
+      this.collides_with = []
+      this.isInCollision = false;
       this.collisionRadiusMap = {};
       this.lastCollidedEntity = null;
-      this.id = this.getId();
+
+      merge(view_opts, opts);
       supr(this, 'init', [view_opts]);
       this.queue = new Queue(this);
-      this.collides_with = opts["collides_with"] || [];
-      this.isInCollision = false;
-      this.touchLock = false;
-      this.isGhost = false;
       this.animator = animate(this, 'moveAnimation');
       this.scaleAnimator = animate(this, 'scaleAnimation');
-      this.lockScale = false;
     };
 
     /**
@@ -118,13 +120,22 @@ exports = Class(ui.View, function (supr) {
       }
     };
 
+    /**
+     * Returns true if entity can collide with other entity
+     * @param {Object} entity - The other entity to check collision for
+     * @return {Boolean}
+     */
     this.canCollideWith = function(entity) {
       var isSameType = this.type === entity.type;
       var isInCollideList = this.collides_with.indexOf(entity.type) > -1;
-      var isLastEntity = this.lastCollidedEntity && this.lastCollidedEntity.id === entity.id
+      var isLastEntity = this.lastCollidedEntity && this.lastCollidedEntity.id === entity.id;
       return this.doUpdate && (!this.isGhost || !entity.isGhost) && (isInCollideList) && !isLastEntity;
     };
 
+    /**
+     * Aligns this view towards an angle
+     * @param {Number} angle - The angle in radian
+     */
     this.rotateTo = function(angle) {
       this.style.r = angle;
     };
@@ -134,6 +145,13 @@ exports = Class(ui.View, function (supr) {
       return this.moveTo(inv.x, inv.y, animate.easeOut);
     };
 
+    /**
+     * Moves this view to a point, also rotates to its direction
+     * @param {Number} targetX - Destination x
+     * @param {Number} targetY - Destination y
+     * @param {Number} easeFn - Optional the easing function of the animation
+     * @return {animate}
+     */
     this.moveTo = function(targetX, targetY, easeFn) {
       if (targetX === undefined || targetY === undefined) {
         return;
@@ -168,5 +186,22 @@ exports = Class(ui.View, function (supr) {
       }, 50).then({
         scale: 1
       }, 300);
+    };
+
+    this.blink = function(count) {
+      this.touchLock = true;
+      count = count || 0;
+      var opacity = count % 2 === 0 ? 1 : 0.5;
+      this.sprite.style.opacity = opacity;
+      if (count >= 12) {
+        this.touchLock = false;
+        this.sprite.style.opacity = 1;
+        return;
+      }
+
+      setTimeout(bind(this, function() {
+        count++;
+        this.blink.call(this, count);
+      }), 400);
     };
 });

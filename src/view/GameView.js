@@ -98,7 +98,6 @@ exports = Class(ui.View, function (supr) {
   this.tick = function (dt) {
     var numberOfEntities = this.entities.length;
     var hasCollidedWithOne = false;
-
     for (var i = 0; i < numberOfEntities; i++) {
       var currentEntity = this.entities[i];
 

@@ -14,8 +14,6 @@ import src.engine.Queue as Queue;
 
 exports = Class(ui.TextView, function (supr) {
   this.name = 'GameTimerView';
-  this.message = null;
-  this.timerText = null;
   this.countup = null;
   this.doCount = false;
   this.countSeconds = 0;
