@@ -1,0 +1,40 @@
+{
+	"appID": "0b723050f1ea4ba9bfc7c077c46a1b6e",
+	"shortName": "sheepkeeper",
+	"title": "sheepkeeper",
+	"studio": {
+		"name": "Weberdevelopment",
+		"domain": "sheepkeeper.app.com",
+		"stagingDomain": "staging.app.com"
+	},
+	"supportedOrientations": [
+		"landscape"
+	],
+	"description": "",
+	"icon": "resources/icons/icon512.png",
+	"splash": {
+		"autoHide": true
+	},
+	"android": {
+		"versionCode": 1,
+		"icons": {
+			"36": "resources/icons/android36.png",
+			"48": "resources/icons/android48.png",
+			"72": "resources/icons/android72.png",
+			"96": "resources/icons/android96.png"
+		}
+	},
+	"ios": {
+		"bundleID": "",
+		"appleID": "12345678",
+		"version": "1.0.0",
+		"icons": {
+			"57": "resources/icons/ios57.png",
+			"72": "resources/icons/ios72.png",
+			"114": "resources/icons/ios114.png",
+			"144": "resources/icons/ios144.png",
+			"renderGloss": true
+		}
+	},
+	"sdkVersion": "release-0.1.46"
+}
