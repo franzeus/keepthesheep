@@ -44,6 +44,8 @@ exports = Class(ui.View, function (supr) {
     this.centerX = this.totalW / 2;
     this.centerY = this.totalH / 2;
     this.queue = new Queue(this);
+    GLOBAL.WORLD_WIDTH = this.totalW;
+    GLOBAL.WORLD_HEIGHT = this.totalH;
   };
 
   this.start = function() {
@@ -55,7 +57,7 @@ exports = Class(ui.View, function (supr) {
     this.counterView.startCount();
     this.queue.add('addBail', [30000, 60000]);
     this.queue.add('spawnSheeps', 30000);
-    //this.queue.add('spawnWolf', 2000);
+    this.queue.add('spawnWolf', 2000);
   };
 
   this.reset = function() {
@@ -119,7 +121,6 @@ exports = Class(ui.View, function (supr) {
         var hasCollided = false;
         var otherShape = otherEntity.getCollisionShape(currentShape.entity);
         if (otherShape) {
-
           if (this.shapeIsRect(currentShape) && this.shapeIsRect(otherShape)) {
             hasCollided = intersect.rectAndRect(currentShape, otherShape);
           } else if (this.shapeIsCircle(currentShape) && this.shapeIsRect(otherShape)) {
@@ -175,9 +176,10 @@ exports = Class(ui.View, function (supr) {
       maxWorldY: this.totalH
     });
     this.addEntity(wolf);
-    wolf.on('Wolf:readyToAttack', bind(this, function() {
-      var sheep = this.getRandomSheep();
-      wolf.attack(sheep);
+    wolf.attack(this.getRandomSheep());
+    wolf.on('Enemy:tapped', bind(this, function(type) {
+      this.removeSubview(wolf);
+      this.queue.add('spawnWolf', 2000);
     }));
   };
 

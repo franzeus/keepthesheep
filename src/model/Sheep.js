@@ -42,7 +42,7 @@ exports = Class(Entity, function(supr) {
     this.collision_shape_radius = 64;
     this.collisionRadiusMap = {
       'Border': 1,
-      'Sheep': 130,
+      'Sheep': 60,
       'Wolf': 60
     };
 

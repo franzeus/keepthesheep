@@ -4,6 +4,10 @@ import math.geom.Vec2D as Vec2D;
 import math.geom.Circle as Circle;
 import math.util as util;
 import animate;
+import src.model.states.StateIdle as StateIdle;
+import src.model.states.StateAttack as StateAttack;
+import src.model.states.StateTease as StateTease;
+import src.model.states.StateDead as StateDead;
 
 exports = Class(Enemy, function(supr) {
 
@@ -26,15 +30,26 @@ exports = Class(Enemy, function(supr) {
         type: "Wolf",
         width: 128,
         height: 128,
-        collides_with: ['Sheep'],
-        collision_shape: Circle,
-        backgroundColor: '#00FF00'
+        backgroundColor: '#543716'
     });
     supr(this, 'init', [opts]);
+    this.maxWorldX = opts.maxWorldX || 0;
+    this.maxWorldY = opts.maxWorldY || 0;
+    this.collides_with = ['Sheep'];
+    this.collision_shape = Circle;
+    this.collisionRadiusMap = {
+      'Sheep': 60
+    };
     this.style.anchorX = this.style.width * 0.5;
     this.style.anchorY = this.style.height * 0.5;
     this.collision_shape_radius = 30;
-    this.speed = 150;
+    this.speed = 20;
+    this.states = {
+      idle: new StateIdle(),
+      attack: new StateAttack(),
+      dead: new StateDead(),
+      tease: new StateTease()
+    };
 
     this.sprite = new SpriteView({
       x: 0,
@@ -49,50 +64,35 @@ exports = Class(Enemy, function(supr) {
       centerAnchor: true
     });
     this.addSubview(this.sprite);
-    this.sprite.startAnimation('idle', {
-      loop : true
-    });
-    this.teaseMe();
+    this.changeState('idle');
   };
 
   this.attack = function(target) {
-    this.isAttacking = true;
-    this.speed = 100;
-    this.moveTo(target.style.x, target.style.y, animate.linear);
-  };
+    var params = {
+      target: target
+    };
 
-  /**
-   * @param {String} position - top, left, right or bottom of the screen
-   */
-  this.teaseMe = function() {
-    var x = this.style.x;
-    var y = this.style.y;
-    var centerX = this.maxWorldX / 2;
-    var centerY = this.maxWorldY / 2;
-    var distance = 100;
-    var angle = this.getRotateToAngle(x, y, centerX, centerY);
-
-    var pointX = x + distance * Math.cos(angle);
-    var pointY = y + distance * Math.sin(angle);
-
-    this.moveTo(pointX, pointY).wait(3000).then({
-      x: x,
-      y: y
-    }, 3000).then(bind(this, function() {
-      this.emit('Wolf:readyToAttack', this);
+    this.changeState('tease', {}, bind(this, function() {
+      this.changeState('attack', params);
     }));
   };
 
   this.onTap = function() {
-    if (this.touchLock || !this.isAttacking) return;
+    if (this.touchLock) return;
     this.bounceDown();
-    //this.setInactive();
-    //this.emit('Enemy:tapped', this.type);
+    this.changeState('dead');
+    this.animator.now({
+      opacity: 0
+    }, 800).then(bind(this, function() {
+      this.emit('Enemy:tapped', this.type);
+    }));
   };
 
   this.collidesWith = function(entity) {
     if (entity.type === 'Sheep') {
-      this.stopMoving();
+      var radian = this.getRotateToAngle(this.style.x, this.style.y, entity.x, entity.y);
+      this.rotateTo(radian);
+      this.changeState('idle');
     }
   };
 

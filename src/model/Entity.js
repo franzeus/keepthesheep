@@ -67,14 +67,14 @@ exports = Class(ui.View, function (supr) {
     };
 
     this.stopMoving = function() {
-      this.changeState('idle');
+      this.animator.clear();
     };
 
     this.getCollisionShape = function(entityType) {
       return null;
     };
 
-    this.changeState = function(stateName, params) {
+    this.changeState = function(stateName, params, callback) {
       if (this.current_state) {
         this.current_state.onExit(this);
         this.prev_states.push(this.current_state.name);
@@ -87,7 +87,7 @@ exports = Class(ui.View, function (supr) {
         if (onEnter) {
           this.current_state_name = stateName;
           this.current_state = state;
-          this.current_state.execute(this);
+          this.current_state.execute(this, params, callback);
         }
       }
       return onEnter;
@@ -126,10 +126,11 @@ exports = Class(ui.View, function (supr) {
      * @return {Boolean}
      */
     this.canCollideWith = function(entity) {
-      var isSameType = this.type === entity.type;
       var isInCollideList = this.collides_with.indexOf(entity.type) > -1;
       var isLastEntity = this.lastCollidedEntity && this.lastCollidedEntity.id === entity.id;
-      return this.doUpdate && (!this.isGhost || !entity.isGhost) && (isInCollideList) && !isLastEntity;
+      var isNotGhost = !(this.isGhost);
+      var isNotDead = !(this.isDead);
+      return this.doUpdate && isNotGhost && isNotDead && isInCollideList && !isLastEntity;
     };
 
     /**

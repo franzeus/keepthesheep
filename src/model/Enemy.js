@@ -18,6 +18,7 @@ exports = Class(Entity, function(supr) {
         collision_shape: Circle
     });
     supr(this, 'init', [opts]);
+    this.maxAttackAttemps = 2;
     this.style.anchorX = this.style.width * 0.5;
     this.style.anchorY = this.style.height * 0.5;
     this.collision_shape_radius = 30;
@@ -35,12 +36,13 @@ exports = Class(Entity, function(supr) {
     this.moveTo(target.style.x, target.style.y, animate.easeIn);
   };
 
-  this.getCollisionShape = function() {
+  this.getCollisionShape = function(entityType) {
+    var radius = this.collisionRadiusMap[entityType] || this.collision_shape_radius;
     var shape = null;
     if (this.collision_shape) {
       var x = this.style.x + this.style.anchorX;
       var y = this.style.y + this.style.anchorY;
-      shape = new this.collision_shape(x, y, this.collision_shape_radius);
+      shape = new this.collision_shape(x, y, radius);
     }
     return shape;
   };
