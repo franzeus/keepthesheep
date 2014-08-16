@@ -1,3 +1,9 @@
+/**
+ * GameView
+ * @author: webarbeit@gmail.com
+ * The view where the game takes place
+ */
+
 import device;
 import ui.View;
 import ui.TextView;
@@ -12,12 +18,6 @@ import src.model.Border as Border;
 import src.model.Bail as Bail;
 import math.geom.Line as Line;
 import animate;
-
-/**
- * GameView
- * @author: webarbeit@gmail.com
- * The view where the game takes place
- */
 
 exports = Class(ui.View, function (supr) {
   this.totalW = 0;

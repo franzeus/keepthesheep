@@ -1,25 +1,22 @@
+/**
+ * @author: webarbeit
+ * Init and handling different views
+ */
 import ui.StackView as StackView;
 import device;
 import src.view.IntroView as IntroView;
 import src.view.GameView as GameView;
 import src.view.GameLoseView as GameLoseView;
 
-/*
-  animate.linear —Animation has the same speed from start to finish.
-  animate.easeIn —Animation has a slow start.
-  animate.easeOut —Animation has a slow end.
-  animate.easeInOut —Animation has both slow start and slow end.
-*/
-
 exports = Class(GC.Application, function () {
 	var rootView = null;
   var boundsWidth = 576;
   var boundsHeight = 1024;
-  var currentView = null;
+  var currentViewName = null;
 
-  var baseWidth = device.screen.width * (boundsHeight / device.screen.height); //864
-  var baseHeight = boundsHeight; //576
-  var scale = device.screen.height / baseHeight; //1
+  var baseWidth = device.screen.width * (boundsHeight / device.screen.height);
+  var baseHeight = boundsHeight;
+  var scale = device.screen.height / baseHeight;
 
   var introView = new IntroView({
     x: 0,
@@ -58,10 +55,10 @@ exports = Class(GC.Application, function () {
 	};
 
   var setCurrentView = function(view) {
-    if (currentView === view.name) {
+    if (currentViewName === view.name) {
       return false;
     }
-    currentView = view.name;
+    currentViewName = view.name;
     rootView.push(view);
     return true;
   };
@@ -81,15 +78,15 @@ exports = Class(GC.Application, function () {
     setCurrentView(gameLoseView);
   };
 
+  /**
+   * Listen for an event dispatched by the device back button
+   */
   device.setBackButtonHandler(function() {
     addIntroView();
   });
 
 	/**
-	 * Listen for an event dispatched by the title screen when
-	 * the start button has been pressed. Hide the title screen,
-	 * show the game screen, then dispatch a custom event to the
-	 * game screen to start the game.
+	 * Listen for an event dispatched by the stacked views
 	 */
   introView.on('introView:start', function () {
     addGameView();

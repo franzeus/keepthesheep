@@ -1,13 +1,13 @@
+/**
+ * GameLoseVIew
+ * @author: webarbeit@gmail.com
+ * This is the view the users sees when he loses the game
+ */
+
 import device;
 import ui.View;
 import ui.TextView;
 import math.util as util;
-
-/**
- * IntroView
- * @author: webarbeit@gmail.com
- * This is the first view the user sees when he starts the app
- */
 
 exports = Class(ui.View, function (supr) {
   this.message = null;

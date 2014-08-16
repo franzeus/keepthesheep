@@ -1,3 +1,8 @@
+/**
+ * BaseState
+ * @author: webarbeit@gmail.com
+ * Base class for any states
+ */
 import math.util as util;
 
 exports = Class(function () {

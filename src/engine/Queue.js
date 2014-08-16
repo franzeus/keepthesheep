@@ -1,3 +1,8 @@
+/**
+ * Queue
+ * @author: webarbeit@gmail.com
+ * Queue for dispatching scheduled events
+ */
 import math.util as util;
 
 exports = Class(function () {
@@ -14,7 +19,7 @@ exports = Class(function () {
   /**
    * @param {String} fnName - The function name to call this[fnName]
    * @param {Array|Number} delay - The delay in miliseconds. Pass Array for random range [2000, 5000]
-   * @param {Object} params - Param object we want to pass to the fnName
+   * @param {Object} params - Optional param object we want to pass to the fnName
    */
   this.add = function(fnName, delay, params) {
     var params = params || {};
@@ -40,12 +45,10 @@ exports = Class(function () {
   this.workQueue = function() {
     var now = +(new Date());
     var len = this.queue.length;
-    var itemsToRemove = [];
     for (var i = 0; i < len; i++) {
       var q = this.queue[i];
       if (q.triggerTs <= now && !q.emitted) {
         this.emitQueueItem(q);
-        itemsToRemove.push(i);
       }
     }
     this.cleanUp();
@@ -60,6 +63,10 @@ exports = Class(function () {
     }
   };
 
+  /**
+   * Removes all queue items with specified fnName
+   * @param {String} fnName - The function name
+   */
   this.removeAllTasks = function(fnName) {
     for (var i = this.queue.length - 1; i >= 0; i--) {
       var q = this.queue[i];
