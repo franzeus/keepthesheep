@@ -16,6 +16,7 @@ import src.model.Sheep as Sheep;
 import src.model.EnemyWolf as EnemyWolf;
 import src.model.Border as Border;
 import src.model.Bail as Bail;
+import src.view.game.GameTimerView as GameTimerView;
 import math.geom.Line as Line;
 import animate;
 
@@ -23,9 +24,7 @@ exports = Class(ui.View, function (supr) {
   this.totalW = 0;
   this.totalH = 0;
   this.BORDER_OFFSET = 50;
-  this.countup = null;
-  this.doCount = false;
-  this.countSeconds = 0;
+  this.counterView = null;
   this.entities = [];
   this.startAmountOfSheeps = 3;
   this.countSheep = 0;
@@ -48,26 +47,22 @@ exports = Class(ui.View, function (supr) {
   };
 
   this.start = function() {
-    animate(this).wait(1000).then({
-      scale: 1
-    }, 1000);
     this.reset();
-    this.removeAllSubviews();
     this.addCounterView();
-    this.startCount();
     this.addBorders();
     this.addCreatures();
 
+    this.counterView.startCount();
     this.queue.add('addBail', [30000, 60000]);
     this.queue.add('spawnSheeps', 30000);
     //this.queue.add('spawnWolf', 2000);
   };
 
   this.reset = function() {
-    this.stopCount();
-    this.countSeconds = 0;
-    if (this.countup) {
-      this.countup.setText(0);
+    this.removeAllSubviews();
+    if (this.counterView) {
+      this.counterView.reset();
+      this.counterView = null;
     }
     this.queue.reset();
     this.entities = [];
@@ -79,8 +74,8 @@ exports = Class(ui.View, function (supr) {
     this.isEnd = true;
     setTimeout(bind(this, function() {
       this.emit('gameView:end', {
-        time: this.countSeconds,
-        timeAsString: this.countup.getText(),
+        time: this.counterView.getElapsedSeconds(),
+        timeAsString: this.counterView.getText(),
         countSheep: this.countSheep
       });
       this.reset();
@@ -337,43 +332,15 @@ exports = Class(ui.View, function (supr) {
   this.addCounterView = function() {
     // TODO: User ScoreView instead
     // http://docs.gameclosure.com/example/text-scoreview/
-    this.countup = new ui.TextView({
-      superview: this,
-      visible: true,
-      x: this.style.width / 2 - 50,
-      y: -15,
-      width: 100,
-      height: 80,
-      size: 80,
-      color: '#fff'
-    });
-  };
-
-  this.startCount = function() {
-    this.doCount = true;
-    this.countup.setText('00:00');
-    this.increaseCounter();
-  };
-
-  this.stopCount = function() {
-    this.doCount = false;
-  };
-
-  this.increaseCounter = function() {
-    var zero = function(num) {
-      return num < 10 ? '0' + num : num;
-    };
-    var current = this.countSeconds;
-    var minutes = Math.floor(current / 60);
-    var seconds = current - (minutes * 60);
-    var formated = zero(minutes) + ':' + zero(seconds);
-    this.countup.setText(formated);
-
-    this.countSeconds++;
-    if (!this.doCount) {
-      return;
+    if (!this.counterView) {
+      this.counterView = new GameTimerView({
+        x: this.style.width / 2 - 50,
+        y: -15,
+        width: 100,
+        height: 80
+      });
+      this.addSubview(this.counterView);
     }
-    this.queue.add('increaseCounter', 1000);
   };
 
 });
