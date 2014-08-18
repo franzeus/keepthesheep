@@ -17,6 +17,8 @@ exports = Class(BaseState, function () {
         object.animator.clear();
       }
       object.isMoving = false;
+
+      this.setSprite(object, 'idle');
     }
 
     return entered;

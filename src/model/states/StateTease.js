@@ -22,7 +22,7 @@ exports = Class(BaseState, function () {
 
   this.execute = function(object, params, callback) {
 
-    var x = GLOBAL.WORLD_WIDTH - 100;
+    var x = GLOBAL.WORLD_WIDTH - 400;
     var y = GLOBAL.WORLD_HEIGHT;
     object.style.x = x;
     object.style.y = y;

@@ -20,7 +20,7 @@ exports = Class(BaseState, function () {
     if (this.attackAttemps === 0) {
       var worldRect = new Rect(0, 0, GLOBAL.WORLD_WIDTH, GLOBAL.WORLD_HEIGHT);
       // Recommended Rect.SIDES does not work, but they represent numbers for each side (top, left ...)
-      var side = util.random(0, 3);
+      var side = util.random(1, 4);
       var edge = worldRect.getSide(side);
       var pos = edge.start;
       object.style.x = pos.x;
@@ -31,7 +31,7 @@ exports = Class(BaseState, function () {
     // then he flees
     if (this.attackAttemps >= object.maxAttackAttemps && object.isInState('attack')) {
       // TODO: write state for this
-      object.moveTo(0, 0, animate.linear);
+      object.moveTo(-object.width, -object.heigth, animate.linear);
       return false;
     }
 
