@@ -22,6 +22,7 @@ exports = Class(BaseState, function () {
       object.doUpdate = false;
       object.touchLock = true;
       object.queue.cleanUp();
+      object.clearStates();
     }
 
     return entered;

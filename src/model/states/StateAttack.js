@@ -6,7 +6,7 @@ import animate;
 exports = Class(BaseState, function () {
 
   this.init = function () {
-    this.name = 'StateAttackWithTease';
+    this.name = 'StateAttack';
     this.is_current = false;
     this.attackAttemps = 0;
   };
@@ -31,7 +31,7 @@ exports = Class(BaseState, function () {
     // then he flees
     if (this.attackAttemps >= object.maxAttackAttemps && object.isInState('attack')) {
       // TODO: write state for this
-      object.moveTo(-object.width, -object.heigth, animate.linear);
+      object.moveTo(0, 0, animate.linear);
       return false;
     }
 
@@ -45,12 +45,12 @@ exports = Class(BaseState, function () {
   this.execute = function(object, params) {
     var target = params.target;
     this.attackAttemps++;
-    object.moveTo(target.style.x, target.style.y, animate.linear)
-          .wait(500)
-          .then(bind(this, function() {
-            // Repeat attack
-            object.changeState('attack', params);
-          }));
+
+    object.changeState('moveTo', {
+      x: target.style.x,
+      y: target.style.y
+    });
+
     return true;
   };
 

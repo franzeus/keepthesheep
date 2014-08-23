@@ -14,9 +14,10 @@ exports = Class(Entity, function (supr) {
       supr(this, 'init', [opts]);
       this.collides_with = ['Sheep'];
       this.collision_shape = Rect;
+      this.collision_shapes = [['body', Rect, 1]];
     };
 
-    this.getCollisionShape = function(entityType) {
+    this.getCollisionShape = function(collisionShape) {
       if (this.collision_shape) {
         var x = this.style.x;
         var y = this.style.y;

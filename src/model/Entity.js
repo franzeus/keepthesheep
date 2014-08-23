@@ -4,6 +4,8 @@ import math.geom.Vec2D as Vec2D;
 import math.geom.Line as Line;
 import src.engine.Queue as Queue;
 import src.model.states.StateIdle as StateIdle;
+import src.engine.Helper as Helper;
+import src.model.states.StateMoveTo as StateMoveTo;
 
 exports = Class(ui.View, function (supr) {
 
@@ -21,6 +23,7 @@ exports = Class(ui.View, function (supr) {
       };
       this.id = this.getId();
       this.speed = 10;
+      this.initSpeed = this.speed;
       this.isDead = false;
       this.isGhost = false;
       this.isMoving = false;
@@ -29,18 +32,25 @@ exports = Class(ui.View, function (supr) {
       this.doUpdate = true;
       this.type = opts.type || 'Entity';
 
+      this.helper = new Helper();
+
       // States
       this.state_manager = null;
       this.states = {
         idle: new StateIdle()
       };
       this.current_state = null;
-      this.prev_states = [];
       this.current_state_name = null;
+      this.states_stack = [];
+      this.default_state = {
+        name: 'idle',
+        params: {}
+      };
 
       // Collision
-      this.collision_shape = null,
-      this.collides_with = []
+      this.collision_shape = null;
+      this.collision_shapes = [];
+      this.collides_with = [];
       this.isInCollision = false;
       this.collisionRadiusMap = {};
       this.lastCollidedEntity = null;
@@ -70,27 +80,97 @@ exports = Class(ui.View, function (supr) {
       this.animator.clear();
     };
 
-    this.getCollisionShape = function(entityType) {
-      return null;
+    this.getCollisionShape = function(collisionShape) {
+      var name = collisionShape[0];
+      var shape = collisionShape[1];
+      var radius = collisionShape[2];
+      var x = this.style.x + this.style.anchorX;
+      var y = this.style.y + this.style.anchorY;
+      return new shape(x, y, radius);
     };
 
     this.changeState = function(stateName, params, callback) {
+      // Exit current state
       if (this.current_state) {
         this.current_state.onExit(this);
-        this.prev_states.push(this.current_state.name);
       }
+
       var onEnter = false;
       var state = this.states[stateName];
       if (state) {
         onEnter = state.onEnter(this, params);
         // Check if state could be changed
         if (onEnter) {
+          this.addToStateStack(stateName, params);
           this.current_state_name = stateName;
           this.current_state = state;
           this.current_state.execute(this, params, callback);
+          //console.log(stateName, this.states_stack);
+        // Could not be changed, return to last state
+        } else {
+          this.returnToLastState();
         }
+      } else {
+        console.warn(this.type, 'has no state', stateName);
       }
       return onEnter;
+    };
+
+    this.returnToLastState = function() {
+      // If there are states on stack, then we return to the prev one
+      if (this.states_stack.length) {
+        // Remove current
+        this.states_stack.pop();
+        var prev = null;
+        if (this.states_stack.length) {
+          prev = this.states_stack.pop();
+        }
+        if (prev) {
+          this.changeState(prev[0], prev[1]);
+        } else {
+          this.returnToDefaultState();
+        }
+      } else {
+        this.returnToDefaultState();
+      }
+    };
+
+    this.clearStates = function() {
+      if (this.current_state) {
+        this.current_state.onExit(this);
+      }
+      this.states_stack = [];
+      this.current_state_name = null;
+      this.current_state = null;
+    };
+
+    this.removeStatesFromStackByName = function(stateName) {
+      for (var i = this.states_stack.length - 1; i >= 0; i--) {
+        var curr = this.states_stack[i];
+        if (curr[0] === stateName) {
+          this.states_stack.splice(i, 1);
+        }
+      }
+    };
+
+    this.returnToDefaultState = function() {
+      this.clearStates();
+      var default_state = this.default_state;
+      this.changeState(default_state.name, default_state.params);
+    };
+
+    this.addToStateStack = function(stateName, params) {
+      params = params || {};
+      var lastIndex = this.states_stack.length - 1;
+      // States in stack
+      if (lastIndex >= 0) {
+        var lastStateName = this.states_stack[lastIndex][0];
+        if (lastStateName !== stateName) {
+          this.states_stack.push([stateName, params]);
+        }
+      } else {
+        this.states_stack.push([stateName, params]);
+      }
     };
 
     this.hasHigherPrioThanCurrentState = function(stateName) {
@@ -141,9 +221,9 @@ exports = Class(ui.View, function (supr) {
       this.style.r = angle;
     };
 
-    this.inverseDirection = function() {
+    this.getInverseDirection = function() {
       var inv = this.directionVec.negate();
-      return this.moveTo(inv.x, inv.y, animate.easeOut);
+      return { x: inv.x, y: inv.y };
     };
 
     /**
@@ -189,20 +269,19 @@ exports = Class(ui.View, function (supr) {
       }, 300);
     };
 
-    this.blink = function(count) {
-      this.touchLock = true;
+    this.blink = function(count, blinkMax) {
       count = count || 0;
+      blinkMax = blinkMax || 14
       var opacity = count % 2 === 0 ? 1 : 0.5;
       this.sprite.style.opacity = opacity;
-      if (count >= 12) {
-        this.touchLock = false;
+      if (count >= blinkMax) {
         this.sprite.style.opacity = 1;
         return;
       }
 
       setTimeout(bind(this, function() {
         count++;
-        this.blink.call(this, count);
+        this.blink.call(this, count, blinkMax);
       }), 400);
     };
 });

@@ -14,6 +14,7 @@ import math.geom.intersect as intersect;
 import src.engine.Queue as Queue;
 import src.model.Sheep as Sheep;
 import src.model.EnemyWolf as EnemyWolf;
+import src.model.Shepard as Shepard;
 import src.model.Border as Border;
 import src.model.Bail as Bail;
 import src.view.game.GameTimerView as GameTimerView;
@@ -56,8 +57,9 @@ exports = Class(ui.View, function (supr) {
 
     this.counterView.startCount();
     this.queue.add('addBail', [30000, 60000]);
-    this.queue.add('spawnSheeps', 30000);
-    this.queue.add('spawnWolf', 2000);
+    this.queue.add('spawnSheep', 30000);
+    this.queue.add('spawnWolf', [15000, 40000]);
+    this.queue.add('spawnShepard', [20000, 60000]);
   };
 
   this.reset = function() {
@@ -68,6 +70,7 @@ exports = Class(ui.View, function (supr) {
     }
     this.queue.reset();
     this.entities = [];
+    this.sheepEntities = [];
     this.isEnd = false;
   };
 
@@ -81,7 +84,7 @@ exports = Class(ui.View, function (supr) {
         countSheep: this.countSheep
       });
       this.reset();
-    }), 2000);
+    }), 4000);
   };
 
   this.shapeIsRect = function(shape) {
@@ -116,25 +119,38 @@ exports = Class(ui.View, function (supr) {
         // Skip if it is the same entity OR if it can not collide with other entity
         if (i === k || !currentEntity.canCollideWith(otherEntity)) { continue };
 
-        var currentShape = currentEntity.getCollisionShape(otherEntity.type);
-        if (!currentShape) break;
-        var hasCollided = false;
-        var otherShape = otherEntity.getCollisionShape(currentShape.entity);
-        if (otherShape) {
-          if (this.shapeIsRect(currentShape) && this.shapeIsRect(otherShape)) {
-            hasCollided = intersect.rectAndRect(currentShape, otherShape);
-          } else if (this.shapeIsCircle(currentShape) && this.shapeIsRect(otherShape)) {
-            hasCollided = intersect.circleAndRect(currentShape, otherShape);
-          } else if (this.shapeIsRect(currentShape) && this.shapeIsCircle(otherShape)) {
-            hasCollided = intersect.circleAndRect(otherShape, currentShape);
-          } else {
-            hasCollided = this.intersectCircles(currentShape, otherShape, currentShape.radius);
+        var currentCollisionShapes = currentEntity.collision_shapes;
+        for (var l = 0; l < currentCollisionShapes.length; l++) {
+          // Array [name, class, radius]
+          var currentCollisionShape = currentCollisionShapes[l];
+          // E.g. Circle
+          var currentShape = currentEntity.getCollisionShape(currentCollisionShape);
+
+          var otherCollisionShapes = otherEntity.collision_shapes;
+          for (var m = 0; m < otherCollisionShapes.length; m++) {
+            // Array [name, class, radius]
+            var otherCollisionShape = otherCollisionShapes[m];
+            // E.g. Circle
+            var otherShape = otherEntity.getCollisionShape(otherCollisionShape);
+
+            var hasCollided = false;
+            if (this.shapeIsRect(currentShape) && this.shapeIsRect(otherShape)) {
+              hasCollided = intersect.rectAndRect(currentShape, otherShape);
+            } else if (this.shapeIsCircle(currentShape) && this.shapeIsRect(otherShape)) {
+              hasCollided = intersect.circleAndRect(currentShape, otherShape);
+            } else if (this.shapeIsRect(currentShape) && this.shapeIsCircle(otherShape)) {
+              hasCollided = intersect.circleAndRect(otherShape, currentShape);
+            } else {
+              hasCollided = this.intersectCircles(currentShape, otherShape, currentShape.radius);
+            }
+
+            if (hasCollided) {
+              hasCollidedWithOne = true;
+              currentEntity.collidesWith(otherEntity, currentCollisionShape);
+            }
+
           }
 
-          if (hasCollided) {
-            hasCollidedWithOne = true;
-            currentEntity.collidesWith(otherEntity);
-          }
 
         }
       }
@@ -155,16 +171,16 @@ exports = Class(ui.View, function (supr) {
     return sheep;
   };
 
-  this.spawnSheeps = function() {
+  this.spawnSheep = function() {
     var pos = this.getRandomSheepSpawnPosition();
     var sheep = this.getSheepObject(pos);
-    sheep.isGhost = true;
     this.addEntity(sheep);
-    sheep.blink(0);
-    sheep.moveTo(this.totalW / 2, this.totalH / 2).then(bind(sheep, function() {
-      sheep.isGhost = false;
-    }));
-    this.queue.add('spawnSheeps', [13000, 100000]);
+    sheep.isGhost = true;
+    sheep.changeState('spawn', {
+      x: this.totalW / 2,
+      y: this.totalH / 2
+    });
+    this.queue.add('spawnSheep', [13000, 100000]);
   };
 
   this.spawnWolf = function() {
@@ -179,8 +195,19 @@ exports = Class(ui.View, function (supr) {
     wolf.attack(this.getRandomSheep());
     wolf.on('Enemy:tapped', bind(this, function(type) {
       this.removeSubview(wolf);
-      this.queue.add('spawnWolf', 2000);
+      this.queue.add('spawnWolf', [8000, 20000]);
     }));
+  };
+
+  this.spawnShepard = function() {
+    var shepard = new Shepard({
+      x: 0,
+      y: 0,
+      maxWorldX: this.totalW,
+      maxWorldY: this.totalH
+    });
+    this.addEntity(shepard);
+    shepard.startAction();
   };
 
   this.addEntity = function(entity) {
@@ -258,7 +285,6 @@ exports = Class(ui.View, function (supr) {
       var pos = this.getRandomSheepStartPosition();
       var sheep = this.getSheepObject(pos);
       this.addEntity(sheep);
-      sheep.queue.add('moveRandomly', [2000, 3000]);
     }
   };
 
@@ -281,9 +307,10 @@ exports = Class(ui.View, function (supr) {
       var e = this.entities[i];
       if (e.type === 'Sheep' && !e.isDead) {
         e.queue.cleanUp();
-        e.moveTo.call(e, x, y).then(bind(e, function() {
-          this.moveRandomly.call(this);
-        }));
+        e.changeState('moveTo', {
+          x: x,
+          y: y
+        });
       }
     }
   };

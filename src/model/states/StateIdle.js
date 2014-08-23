@@ -13,11 +13,6 @@ exports = Class(BaseState, function () {
 
     if (!object.isInState('dead')) {
       entered = true;
-      if (object.animator) {
-        object.animator.clear();
-      }
-      object.isMoving = false;
-
       this.setSprite(object, 'idle');
     }
 

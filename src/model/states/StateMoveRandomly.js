@@ -20,12 +20,16 @@ exports = Class(BaseState, function () {
   };
 
   this.execute = function(object) {
+    if (!this.is_current) { return false; }
     var x = util.random(0, object.maxWorldX);
     var y = util.random(0, object.maxWorldY);
-    var nextExe = util.random(2000, 5000);
-    object.moveTo.call(object, x, y, animate.easeIn).wait(nextExe).then(bind(this, function() {
-      this.execute.call(this, object);
-    }));
+
+    object.changeState('moveTo', {
+      x: x,
+      y: y
+    });
+
+    return true;
   };
 
   this._onExit = function(object) {

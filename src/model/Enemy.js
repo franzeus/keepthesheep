@@ -18,6 +18,10 @@ exports = Class(Entity, function(supr) {
         collision_shape: Circle
     });
     supr(this, 'init', [opts]);
+    this.collision_shapes = [
+      ['sight', Circle, 200],
+      ['body', Circle, 64]
+    ];
     this.maxAttackAttemps = 2;
     this.style.anchorX = this.style.width * 0.5;
     this.style.anchorY = this.style.height * 0.5;

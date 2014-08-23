@@ -40,6 +40,7 @@ exports = Class(BaseState, function () {
   };
 
   this._onExit = function(object) {
+    object.removeStatesFromStackByName('tease');
     object.touchLock = false;
     return;
   };
