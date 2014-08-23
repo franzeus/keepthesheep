@@ -40,17 +40,6 @@ exports = Class(Entity, function(supr) {
     this.moveTo(target.style.x, target.style.y, animate.easeIn);
   };
 
-  this.getCollisionShape = function(entityType) {
-    var radius = this.collisionRadiusMap[entityType] || this.collision_shape_radius;
-    var shape = null;
-    if (this.collision_shape) {
-      var x = this.style.x + this.style.anchorX;
-      var y = this.style.y + this.style.anchorY;
-      shape = new this.collision_shape(x, y, radius);
-    }
-    return shape;
-  };
-
   this.setInactive = function() {
     this.touchLock = true;
     this.stopMoving();
@@ -62,5 +51,5 @@ exports = Class(Entity, function(supr) {
     this.emit('Enemy:tapped', this.type);
   };
 
-  
+
 });

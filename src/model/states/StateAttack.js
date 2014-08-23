@@ -29,9 +29,10 @@ exports = Class(BaseState, function () {
 
     // When attacker did not get the target in maxAttackAttemps,
     // then he flees
-    if (this.attackAttemps >= object.maxAttackAttemps && object.isInState('attack')) {
-      // TODO: write state for this
-      object.moveTo(0, 0, animate.linear);
+    if (this.attackAttemps >= object.maxAttackAttemps) {
+      object.changeState('moveTo', {x: 0, y: 0 }, function() {
+        // Force stoping
+      });
       return false;
     }
 

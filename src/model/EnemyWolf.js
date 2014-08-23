@@ -37,7 +37,9 @@ exports = Class(Enemy, function(supr) {
     this.maxWorldX = opts.maxWorldX || 0;
     this.maxWorldY = opts.maxWorldY || 0;
     this.collides_with = ['Sheep'];
-    this.collision_shape = Circle;
+    this.collision_shapes = [
+      ['body', Circle, 64]
+    ];
     this.collisionRadiusMap = {
       'Sheep': 60
     };
@@ -96,8 +98,9 @@ exports = Class(Enemy, function(supr) {
 
   this.collidesWith = function(entity) {
     if (entity.type === 'Sheep') {
-      var radian = this.getRotateToAngle(this.style.x, this.style.y, entity.x, entity.y);
+      var radian = this.getRotateToAngle(this.style.x, this.style.y, entity.x + entity.style.width / 2, entity.y + entity.style.height / 2);
       this.rotateTo(radian);
+      this.clearStates();
       this.changeState('idle');
     }
   };

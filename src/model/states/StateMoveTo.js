@@ -52,7 +52,7 @@ exports = Class(BaseState, function () {
   };
 
   this.execute = function(object, params, callback) {
-    if (!this.is_current || !object || !params.x || !params.y) {
+    if (!this.is_current || !object || params.x === undefined || params.y === undefined) {
       console.error('No params for StateMoveTo.execute OR is not current state');
       return false;
     }

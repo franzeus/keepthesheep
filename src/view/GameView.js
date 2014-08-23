@@ -57,7 +57,7 @@ exports = Class(ui.View, function (supr) {
 
     this.counterView.startCount();
     this.queue.add('addBail', [30000, 60000]);
-    this.queue.add('spawnSheep', 30000);
+    this.queue.add('spawnSheep', [30000, 45000]);
     this.queue.add('spawnWolf', [15000, 40000]);
     this.queue.add('spawnShepard', [20000, 60000]);
   };
@@ -101,15 +101,16 @@ exports = Class(ui.View, function (supr) {
   };
 
   this.tick = function (dt) {
+    if (this.isEnd) return;
     var numberOfEntities = this.entities.length;
     var hasCollidedWithOne = false;
+    var isLose = false;
     for (var i = 0; i < numberOfEntities; i++) {
       var currentEntity = this.entities[i];
 
       // A sheep is dead, end the game
       if (currentEntity.type === 'Sheep' && currentEntity.isDead) {
-        this.lose();
-        break;
+        isLose = true;
       }
 
       hasCollidedWithOne = false;
@@ -151,11 +152,17 @@ exports = Class(ui.View, function (supr) {
 
           }
 
-
         }
       }
       currentEntity.setIsInCollision(hasCollidedWithOne);
 
+      if (isLose) {
+        currentEntity.reset();
+      }
+
+    }
+    if (isLose) {
+      this.lose();
     }
     this.queue.workQueue();
   };
@@ -195,7 +202,9 @@ exports = Class(ui.View, function (supr) {
     wolf.attack(this.getRandomSheep());
     wolf.on('Enemy:tapped', bind(this, function(type) {
       this.removeSubview(wolf);
-      this.queue.add('spawnWolf', [8000, 20000]);
+      if (!this.isEnd) {
+        this.queue.add('spawnWolf', [8000, 20000]);
+      }
     }));
   };
 

@@ -80,6 +80,11 @@ exports = Class(ui.View, function (supr) {
       this.animator.clear();
     };
 
+    this.reset = function() {
+      this.queue.reset();
+      this.clearStates();
+    };
+
     this.getCollisionShape = function(collisionShape) {
       var name = collisionShape[0];
       var shape = collisionShape[1];
@@ -105,7 +110,6 @@ exports = Class(ui.View, function (supr) {
           this.current_state_name = stateName;
           this.current_state = state;
           this.current_state.execute(this, params, callback);
-          //console.log(stateName, this.states_stack);
         // Could not be changed, return to last state
         } else {
           this.returnToLastState();
@@ -189,7 +193,7 @@ exports = Class(ui.View, function (supr) {
       return this.current_state_name === stateName;
     };
 
-    this.collidesWith = function(entity) {
+    this.collidesWith = function(entity, collisionShape) {
       console.log(this.type + " collides with " + entity.type);
     };
 
