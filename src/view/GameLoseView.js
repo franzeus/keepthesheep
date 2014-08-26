@@ -12,6 +12,7 @@ import math.util as util;
 exports = Class(ui.View, function (supr) {
   this.message = null;
   this.timerText = null;
+  this.countSheepText = null;
   var centerX = 0;
   var centerY = 0;
   var teaserLow = [
@@ -58,6 +59,7 @@ exports = Class(ui.View, function (supr) {
     var randIndex = util.random(0, teaserList.length - 1);
     var randTeaser = teaserList[randIndex];
     this.setTeaser(randTeaser);
+    this.setCountSheep(data.countSheep + " Sheeps");
   };
 
   this.addText = function(message) {
@@ -78,6 +80,26 @@ exports = Class(ui.View, function (supr) {
       });
     }
     this.message.setText(message);
+  };
+
+  this.setCountSheep = function(message) {
+    if (!this.countSheepText) {
+      var w = 250;
+      var h = 150;
+      var cx = centerX - (w / 2);
+      var cy = 700;
+      this.countSheepText = new ui.TextView({
+        superview: this,
+        visible: true,
+        x: cx,
+        y: cy,
+        width: w,
+        height: h,
+        size: 100,
+        color: '#ffffff'
+      });
+    }
+    this.countSheepText.setText(message);
   };
 
   this.setTeaser = function(message) {

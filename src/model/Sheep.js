@@ -45,7 +45,8 @@ exports = Class(Entity, function(supr) {
     this.collides_with = ['Border', 'Sheep', 'Wolf', 'Shepard'];
     this.collision_shapes = [
       ['sight', Circle, 300],
-      ['body', Circle, 64]
+      ['body', Circle, 64],
+      ['bodySheep', Circle, 128]
     ];
     this.collision_shape = Circle;
     this.collision_shape_radius = 64;
@@ -102,6 +103,7 @@ exports = Class(Entity, function(supr) {
     this.bounceDown();
     if (this.changeState('idle')) {
       this.clearStates();
+      this.lastCollidedEntity = null;
 
       // Either inverse direction of the sheep or just stop it, random decides
       if (randAction > 80) {
@@ -115,15 +117,20 @@ exports = Class(Entity, function(supr) {
     }
   };
 
+  this.resetCollision = function() {
+    this.lastCollidedEntity = null;
+    this.returnToDefaultState();
+  };
+
   this.setIsInCollision = function(state) {
     this.isInCollision = state;
     if (!state) {
-      this.lastCollidedEntity = null;
+      //this.lastCollidedEntity = null;
     }
   };
 
   this.collidesWith = function(entity, collisionShape) {
-    if (this.isGhost) return;
+    if (this.isGhost || entity.isGhost || entity.isDead) return;
     var collisionName = collisionShape[0];
 
     if (collisionName === 'body' && (entity.type === 'Border' || entity.type === 'Wolf')) {
@@ -146,10 +153,20 @@ exports = Class(Entity, function(supr) {
       this.changeState('flee', { x: this.maxWorldX / 2, y: this.maxWorldY / 2 });
       return;
     }
-
-    if (entity.type === this.type) {
+/*
+    if (collisionName === 'bodySheep' && entity.type === this.type) {
+      if ((this.lastCollidedEntity && this.lastCollidedEntity !== entity.id) || !this.lastCollidedEntity) {
+        var inverseDirection = this.helper.getInverseDirectionTo(this.style.x, this.style.y, entity.style.x, entity.style.y, 50, Math.PI);
+        console.log(this.id, entity.id, 'collide', this.lastCollidedEntity);
+        this.clearStates();
+        this.changeState('moveTo', inverseDirection, bind(this, function() {
+          this.resetCollision();
+        }));
+        this.lastCollidedEntity = entity;
+      }
       return;
     }
+*/
   };
 
 });

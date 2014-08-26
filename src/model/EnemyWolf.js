@@ -98,6 +98,7 @@ exports = Class(Enemy, function(supr) {
 
   this.collidesWith = function(entity) {
     if (entity.type === 'Sheep') {
+      this.touchLock = true;
       var radian = this.getRotateToAngle(this.style.x, this.style.y, entity.x + entity.style.width / 2, entity.y + entity.style.height / 2);
       this.rotateTo(radian);
       this.clearStates();

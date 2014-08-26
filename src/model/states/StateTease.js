@@ -28,7 +28,7 @@ exports = Class(BaseState, function () {
     object.style.y = y;
     var pointY = y - object.style.height;
 
-    object.moveTo(x, pointY).wait(3000).then({
+    object.moveTo(x, pointY).wait(2000).then({
       x: x,
       y: y
     }, 1000).then(bind(this, function() {

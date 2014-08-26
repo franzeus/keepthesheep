@@ -83,14 +83,15 @@ exports = Class(ui.View, function (supr) {
     this.reset = function() {
       this.queue.reset();
       this.clearStates();
+      this.states = {};
     };
 
     this.getCollisionShape = function(collisionShape) {
       var name = collisionShape[0];
       var shape = collisionShape[1];
       var radius = collisionShape[2];
-      var x = this.style.x + this.style.anchorX;
-      var y = this.style.y + this.style.anchorY;
+      var x = this.style.x + this.style.width / 2;
+      var y = this.style.y + this.style.height / 2;
       return new shape(x, y, radius);
     };
 
@@ -194,7 +195,7 @@ exports = Class(ui.View, function (supr) {
     };
 
     this.collidesWith = function(entity, collisionShape) {
-      console.log(this.type + " collides with " + entity.type);
+      return;
     };
 
     this.setIsInCollision = function(state) {

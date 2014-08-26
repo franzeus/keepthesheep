@@ -8,11 +8,12 @@ exports = Class(Entity, function (supr) {
           type: 'Border',
           handleEvents: false,
           ignoreSubviews: true,
-          backgroundColor: '#FFFFFF',
-          opacity: 0.5
+          backgroundColor: opts.backgroundColor || '#FFFFFF',
+          opacity: opts.opacity || 1
       });
       supr(this, 'init', [opts]);
-      this.collides_with = ['Sheep'];
+      this.isGhost = opts.isGhost || false;
+      this.collides_with = [];
       this.collision_shape = Rect;
       this.collision_shapes = [['body', Rect, 1]];
     };

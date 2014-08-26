@@ -71,6 +71,8 @@ exports = Class(Entity, function(supr) {
       handleEvents: true,
       centerAnchor: true
     });
+    this.runCount = 0;
+    this.maxRunCount = 3;
     this.addSubview(this.sprite);
     this.changeState('idle');
   };
@@ -90,27 +92,38 @@ exports = Class(Entity, function(supr) {
     }));
   };
 
-  this.keepAction = function() {
-    var offset = 50;
-    var pos = this.helper.getRandomRectEdgePoints(offset, offset, this.maxWorldX - offset, this.maxWorldY - offset);
+  this.actionHide = function() {
+    this.runCount = 0;
+    this.isGhost = true;
+    this.animator.now({
+      opacity: 0
+    }, 800).then(bind(this, function() {
+      this.emit('Shepard:runStop');
+    }));
+  };
+
+  this.keepAction = function(x, y) {
+    if (this.runCount >= this.maxRunCount) {
+      this.actionHide();
+      return;
+    }
+
+    var offset = 80;
+    var pos = this.helper.getRandomRectEdgePoints(offset, offset, this.maxWorldX - offset * 2, this.maxWorldY - offset * 2);
     var first = util.random(0, 1);
     var second = first === 0 ? 1 : 0;
     var start = pos[first];
     var end = pos[second];
-    var x = start.x;
-    var y = start.y;
+    var x = x || start.x;
+    var y = y || start.y;
     this.style.x = x;
     this.style.y = y;
-    console.log(x, y, end.x, end.y);
-    this.moveTo(end.x, end.y).then(bind(this, function() {
-      this.moveTo(start.x, start.y).then(bind(this, function() {
-        this.moveTo(end.x, end.y);
-      }));
-    }));
-  };
 
-  this.collidesWith = function(entity) {
-    return;
+    this.moveTo(end.x, end.y).then(bind(this, function() {
+      this.runCount++;
+      this.keepAction(end.x, end.y);
+    }));
+
   };
 
 });

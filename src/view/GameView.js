@@ -20,6 +20,7 @@ import src.model.Bail as Bail;
 import src.view.game.GameTimerView as GameTimerView;
 import math.geom.Line as Line;
 import animate;
+import AudioManager;
 
 exports = Class(ui.View, function (supr) {
   this.totalW = 0;
@@ -32,6 +33,7 @@ exports = Class(ui.View, function (supr) {
   this.isEnd = false;
   this.queue = null;
   this.sheepEntities = [];
+  this.audiomanager = null;
 
   this.init = function (opts) {
     opts = merge(opts, {
@@ -47,6 +49,16 @@ exports = Class(ui.View, function (supr) {
     this.queue = new Queue(this);
     GLOBAL.WORLD_WIDTH = this.totalW;
     GLOBAL.WORLD_HEIGHT = this.totalH;
+    this.audiomanager = new AudioManager({
+      path: 'resources/sounds',
+      files: {
+        lose: {
+          path: 'music',
+          background: true,
+          loop: false
+        }
+      }
+    });
   };
 
   this.start = function() {
@@ -54,12 +66,14 @@ exports = Class(ui.View, function (supr) {
     this.addCounterView();
     this.addBorders();
     this.addCreatures();
+    this.audiomanager.play('game');
 
     this.counterView.startCount();
     this.queue.add('addBail', [30000, 60000]);
     this.queue.add('spawnSheep', [30000, 45000]);
     this.queue.add('spawnWolf', [15000, 40000]);
     this.queue.add('spawnShepard', [20000, 60000]);
+    this.queue.add('spawnHorizontalBorder', [120000, 260000]);
   };
 
   this.reset = function() {
@@ -77,6 +91,8 @@ exports = Class(ui.View, function (supr) {
   this.lose = function() {
     if (this.isEnd) return;
     this.isEnd = true;
+    this.audiomanager.play('stop');
+    this.audiomanager.play('lose', { loop: false });
     setTimeout(bind(this, function() {
       this.emit('gameView:end', {
         time: this.counterView.getElapsedSeconds(),
@@ -217,6 +233,12 @@ exports = Class(ui.View, function (supr) {
     });
     this.addEntity(shepard);
     shepard.startAction();
+    shepard.on('Shepard:runStop', bind(this, function(type) {
+      this.removeSubview(shepard);
+      if (!this.isEnd) {
+        this.queue.add('spawnShepard', [12000, 60000]);
+      }
+    }));
   };
 
   this.addEntity = function(entity) {
@@ -324,22 +346,23 @@ exports = Class(ui.View, function (supr) {
     }
   };
 
-  this.addArea = function(offset, lineWidth) {
+  this.addArea = function(offset, lineWidth, opts) {
+    opts = opts || {};
     var totalW = this.totalW;
     var totalH = this.totalH;
     var edges = [
       // TOP
       {
-        x: offset + lineWidth,
+        x: offset,
         y: offset,
         width: totalW - offset * 2 - lineWidth,
         height: lineWidth
       },
       // Bottom
       {
-        x: offset + lineWidth,
-        y: totalH - offset,
-        width: totalW - offset * 2 - lineWidth,
+        x: offset,
+        y: totalH - offset - lineWidth,
+        width: totalW - offset * 2,
         height: lineWidth
       },
       // Left
@@ -347,23 +370,98 @@ exports = Class(ui.View, function (supr) {
         x: offset,
         y: offset + lineWidth,
         width: lineWidth,
-        height: totalH - offset * 2 - lineWidth
+        height: totalH - offset * 2 - lineWidth * 2
       },
       // Right
       {
-        x: totalW - offset,
-        y: offset + lineWidth,
+        x: totalW - offset - lineWidth,
+        y: offset,
         width: lineWidth,
         height: totalH - offset * 2 - lineWidth
       }
     ];
     for (var i = 0; i < edges.length; i++) {
+      merge(edges[i], opts);
       this.addEntity(new Border(edges[i]));
     }
   };
 
   this.addBorders = function() {
-    this.addArea(this.BORDER_OFFSET, 20);
+    this.addArea(10, 10, {
+      opacity: 0.4
+    });
+
+    this.addArea(80, 10, {
+      isGhost: true
+    });
+  };
+
+  this.spawnVerticalBorder = function() {
+    var centerX = this.totalW / 2 - 10;
+    var centerLeft = {
+      x: this.totalW / 4 - 5,
+      y: this.totalH / 2
+    };
+    var centerRight = {
+      x: centerX + this.totalW / 4,
+      y: this.totalH / 2
+    };
+
+    for (var i = 0; i < this.sheepEntities.length; i++) {
+      var sheep = this.sheepEntities[i];
+      if (sheep.style.x <= centerX) {
+        sheep.changeState('moveTo', centerLeft);
+      } else {
+        sheep.changeState('moveTo', centerRight);
+      }
+    }
+
+    this.queue.add('addVerticalBorder', 1200);
+  };
+
+  this.addVerticalBorder = function() {
+    var centerX = this.totalW / 2 - 10;
+    var data = {
+      x: centerX,
+      y: 80,
+      width: 10,
+      height: this.totalH - 80 * 2,
+      backgroundColor: '#FF676B'
+    };
+    this.addEntity(new Border(data));
+  };
+
+  this.spawnHorizontalBorder = function() {
+    var centerY = this.totalH / 2 - 10;
+    var centerTop = {
+      x: this.totalW / 2,
+      y: this.totalH / 4
+    };
+    var centerBottom = {
+      x: this.totalW / 2,
+      y: centerY + this.totalH / 4 + 5
+    };
+    for (var i = 0; i < this.sheepEntities.length; i++) {
+      var sheep = this.sheepEntities[i];
+      if (sheep.style.y <= centerY) {
+        sheep.changeState('moveTo', centerTop);
+      } else {
+        sheep.changeState('moveTo', centerBottom);
+      }
+    }
+
+    this.queue.add('addHorizontalBorder', 2000);
+  };
+
+  this.addHorizontalBorder = function() {
+    var data = {
+      y: this.totalH / 2 - 10,
+      x: 80,
+      height: 10,
+      width: this.totalW - 80 * 2,
+      backgroundColor: '#FF676B'
+    };
+    this.addEntity(new Border(data));
   };
 
   this.addCounterView = function() {
@@ -372,7 +470,7 @@ exports = Class(ui.View, function (supr) {
     if (!this.counterView) {
       this.counterView = new GameTimerView({
         x: this.style.width / 2 - 50,
-        y: -15,
+        y: 10,
         width: 100,
         height: 80
       });
